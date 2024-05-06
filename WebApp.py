@@ -3,9 +3,13 @@ from werkzeug.utils import secure_filename
 from datetime import timedelta
 import os
 
+import cv2
+from ultralytics import YOLO
+
 app = Flask(__name__)
 app.config['MODEL_FOLDER'] = 'models/'
 app.config['UPLOAD_FOLDER'] = 'uploads/'
+app.config['RESULT_FOLDER'] = 'results/'
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 app.permanent_session_lifetime = timedelta(minutes=5)
 
@@ -13,8 +17,12 @@ app.permanent_session_lifetime = timedelta(minutes=5)
 def home():
     up_model = session.get('up_model', 'No model uploaded')
     up_file = session.get('up_file', 'No file uploaded')
+
     if up_file != 'No file uploaded':
-        return render_template('homepage.html', up_model=up_model, up_file=up_file, file_name=session['up_file'], file_type=session['up_file_type'])
+        if session['result_file'] == '':
+            return render_template('homepage.html', up_model=up_model, up_file=up_file, file_name=session['up_file'], file_type=session['up_file_type'], result_file='', result_file_type='')
+        else:
+            return render_template('homepage.html', up_model=up_model, up_file=up_file, file_name=session['up_file'], file_type=session['up_file_type'], result_file=session['result_file'], result_file_type=session['result_file_type'])
     else:
         return render_template('homepage.html', up_model=up_model, up_file=up_file, file_name='', file_type='')
 
@@ -42,6 +50,16 @@ def serve_image(filename):
 @app.route('/serve_video/<filename>')
 def serve_video(filename):
     return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), mimetype=f"video/{session['up_file_type']}")
+
+@app.route('/start', methods=['POST'])
+def start_process():
+
+    model_process = YOLO(session['model_path'])
+    result = model_process(session['file_path'])
+
+    session['result_file']
+    session['result_file_type']
+    return redirect(url_for('home'))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
