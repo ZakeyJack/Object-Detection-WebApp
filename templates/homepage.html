@@ -6,7 +6,7 @@
 </div>
 <div class="model-upload-container">
     <form action="/model_upload" method="post" enctype="multipart/form-data">
-        <input type="file" id="upmodel" name="model" required>
+        <input type="file" id="upmodel" name="model" accept=".pt" required>
         <label for="upmodel">{{up_model}}</label>
         <input type="submit" value="Upload">
     </form>
@@ -20,10 +20,19 @@
         </form>
     </div>
     <div class="file-preview-container">
-        {% if file_name == null or file_name == "" %}
-        <p>No file uploaded</p>
+        {% if file_name == null or file_name == "" or file_type == null or file_type == "" %}
+            <p>No file uploaded</p>
         {% else %}
-        <img src="{{ url_for('serve_image', filename=file_name) }}" alt="Uploaded file">
+            {% if file_type in ["apng", "avif", "gif", "png", "jpeg", "jpg", "svg", "webp", "bmp", "ico", "tiff"] %}
+                <img src="{{ url_for('serve_image', filename=file_name) }}" alt="Uploaded file">
+            {% elif file_type in ["mp4", "webm", "ogg", "mov"] %}
+                <video controls>
+                    <source src="{{ url_for('serve_video', filename=file_name)}}" type="video/{{ file_type }}">
+                    Your browser does not support the video tag.
+                </video>
+            {% else %}
+                <p>Unsupported file type</p>
+            {% endif %}
         {% endif %}
     </div>
 </div>

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, send_file
 from werkzeug.utils import secure_filename
 from datetime import timedelta
 import os
@@ -30,7 +30,7 @@ def model_upload():
 def file_upload():
     file = request.files['file']
     session['up_file'] = secure_filename(file.filename)
-    session['up_file_type'] = file.filename.split('.')[-1]
+    session['up_file_type'] = file.filename.split('.')[-1].lower()
     session['file_path'] = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
     file.save(session['file_path'])
     return redirect(url_for('home'))
@@ -38,6 +38,10 @@ def file_upload():
 @app.route('/serve_image/<filename>', methods=['GET'])
 def serve_image(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/serve_video/<filename>')
+def serve_video(filename):
+    return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), mimetype=f"video/{session['up_file_type']}")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
