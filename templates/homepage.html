@@ -34,18 +34,21 @@
                 <p>Unsupported file type</p>
             {% endif %}
         {% endif %}
-        <form action="{{ url_for('start_process')}}" method="post">
-            <input type="submit" name="start_button" value="Start">
-        </form>
     </div>
     <div class="file-result-container">
         {% if result_file == null or result_file == "" %}
         {% else %}
             {% if result_file_type in ["apng", "avif", "gif", "png", "jpeg", "jpg", "svg", "webp", "bmp", "ico", "tiff"] %}
+                <img src="{{ url_for('serve_result_image', filename=result_file)}}">
             {% elif result_file_type in ["mp4", "webm", "ogg", "mov"] %}
             {% else %}
             {% endif %}
         {% endif %}
+    </div>
+    <div class="start_container">
+        <form action="{{ url_for('start_process')}}" method="post">
+            <input type="submit" name="start_button" value="Start">
+        </form>
     </div>
 </div>
 {% endblock %}

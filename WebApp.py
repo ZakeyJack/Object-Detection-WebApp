@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 from datetime import timedelta
 import os
 
-import cv2
+from PIL import Image
 from ultralytics import YOLO
 
 app = Flask(__name__)
@@ -17,9 +17,10 @@ app.permanent_session_lifetime = timedelta(minutes=5)
 def home():
     up_model = session.get('up_model', 'No model uploaded')
     up_file = session.get('up_file', 'No file uploaded')
+    result_file = session.get('result_file', '')
 
     if up_file != 'No file uploaded':
-        if session['result_file'] == '':
+        if result_file == '':
             return render_template('homepage.html', up_model=up_model, up_file=up_file, file_name=session['up_file'], file_type=session['up_file_type'], result_file='', result_file_type='')
         else:
             return render_template('homepage.html', up_model=up_model, up_file=up_file, file_name=session['up_file'], file_type=session['up_file_type'], result_file=session['result_file'], result_file_type=session['result_file_type'])
@@ -51,14 +52,22 @@ def serve_image(filename):
 def serve_video(filename):
     return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), mimetype=f"video/{session['up_file_type']}")
 
+@app.route('/server_result_image/<filename>')
+def serve_result_image(filename):
+    return send_from_directory(app.config['RESULT_FOLDER'], f"predict/{filename}")
+
 @app.route('/start', methods=['POST'])
 def start_process():
 
     model_process = YOLO(session['model_path'])
-    result = model_process(session['file_path'])
+    file = session['up_file']
+    # file = session['up_file'].replace(f".{session['up_file_type']}", ".avi")
 
-    session['result_file']
-    session['result_file_type']
+    result = model_process.predict(session['file_path'], save=True, project=app.config['RESULT_FOLDER'], name="predict")
+
+    session['result_file'] = file
+    session['result_file_path'] = os.path.join(app.config['RESULT_FOLDER'], f"predict/{file}")
+    session['result_file_type'] = session['result_file'].split('.')[-1]
     return redirect(url_for('home'))
 
 if __name__ == "__main__":
