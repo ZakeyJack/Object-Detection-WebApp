@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, send_file
 from werkzeug.utils import secure_filename
-from datetime import timedelta
+from datetime import timedelta, datetime
 import os
 
 from PIL import Image
@@ -54,19 +54,19 @@ def serve_video(filename):
 
 @app.route('/server_result_image/<filename>')
 def serve_result_image(filename):
-    return send_from_directory(app.config['RESULT_FOLDER'], f"predict/{filename}")
+    return send_from_directory(app.config['RESULT_FOLDER'], f"{session['current_time']}/{filename}")
 
 @app.route('/start', methods=['POST'])
 def start_process():
-
+    session['current_time'] = datetime.now().strftime("%Y%m%d%H%M%S")
     model_process = YOLO(session['model_path'])
     file = session['up_file']
     # file = session['up_file'].replace(f".{session['up_file_type']}", ".avi")
 
-    result = model_process.predict(session['file_path'], save=True, project=app.config['RESULT_FOLDER'], name="predict")
+    result = model_process.predict(session['file_path'], save=True, project=app.config['RESULT_FOLDER'], name=session['current_time'])
 
     session['result_file'] = file
-    session['result_file_path'] = os.path.join(app.config['RESULT_FOLDER'], f"predict/{file}")
+    session['result_file_path'] = os.path.join(app.config['RESULT_FOLDER'], f"{session['current_time']}/{file}")
     session['result_file_type'] = session['result_file'].split('.')[-1]
     return redirect(url_for('home'))
 
