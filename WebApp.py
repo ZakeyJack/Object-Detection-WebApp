@@ -2,7 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, session, s
 from werkzeug.utils import secure_filename
 from datetime import timedelta, datetime
 import os
-
+import subprocess
+from IPython.display import HTML
 from PIL import Image
 from ultralytics import YOLO
 
@@ -52,22 +53,34 @@ def serve_image(filename):
 def serve_video(filename):
     return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), mimetype=f"video/{session['up_file_type']}")
 
-@app.route('/server_result_image/<filename>')
+@app.route('/server_result_image/<filename>', methods=['GET'])
 def serve_result_image(filename):
     return send_from_directory(app.config['RESULT_FOLDER'], f"{session['current_time']}/{filename}")
+
+@app.route('/serve_result_video/<filename>')
+def serve_result_video(filename):
+    return send_file(os.path.join(app.config['RESULT_FOLDER'], f"{session['current_time']}/{filename}"), mimetype=f"video/{session['result_file_type']}")
 
 @app.route('/start', methods=['POST'])
 def start_process():
     session['current_time'] = datetime.now().strftime("%Y%m%d%H%M%S")
     model_process = YOLO(session['model_path'])
-    file = session['up_file']
-    # file = session['up_file'].replace(f".{session['up_file_type']}", ".avi")
-
     result = model_process.predict(session['file_path'], save=True, project=app.config['RESULT_FOLDER'], name=session['current_time'])
 
-    session['result_file'] = file
-    session['result_file_path'] = os.path.join(app.config['RESULT_FOLDER'], f"{session['current_time']}/{file}")
-    session['result_file_type'] = session['result_file'].split('.')[-1]
+    if session['up_file_type'] in ['apng', 'avif', 'gif', 'png', 'jpeg', 'jpg', 'svg', 'webp', 'bmp', 'ico', 'tiff']:
+        file = session['up_file']
+        session['result_file'] = file
+        session['result_file_path'] = os.path.join(app.config['RESULT_FOLDER'], f"{session['current_time']}/{file}")
+        session['result_file_type'] = session['result_file'].split('.')[-1]
+    else:
+        file = session['up_file'].replace(f".{session['up_file_type']}", ".avi")
+        video_file = os.path.join(app.config['RESULT_FOLDER'], f"{session['current_time']}/{file}")
+        session['result_file'] = file.replace(".avi", ".mp4")
+        session['result_file_path'] = os.path.join(app.config['RESULT_FOLDER'], f"{session['current_time']}/{session['result_file']}")
+        session['result_file_type'] = session['result_file'].split('.')[-1]
+        command = f"ffmpeg -i {video_file} -c:v libx264 -crf 18 -c:a aac -b:a 128k {session['result_file_path']}"
+        os.system(command)
+    
     return redirect(url_for('home'))
 
 if __name__ == "__main__":

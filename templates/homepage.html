@@ -25,7 +25,7 @@
         {% else %}
             {% if file_type in ["apng", "avif", "gif", "png", "jpeg", "jpg", "svg", "webp", "bmp", "ico", "tiff"] %}
                 <img src="{{ url_for('serve_image', filename=file_name) }}" alt="Uploaded file">
-            {% elif file_type in ["mp4", "webm", "ogg", "mov"] %}
+            {% elif file_type in ["mp4", "webm", "ogg", "mov", "webm"] %}
                 <video controls>
                     <source src="{{ url_for('serve_video', filename=file_name)}}" type="video/{{ file_type }}">
                     Your browser does not support the video tag.
@@ -41,6 +41,10 @@
             {% if result_file_type in ["apng", "avif", "gif", "png", "jpeg", "jpg", "svg", "webp", "bmp", "ico", "tiff"] %}
                 <img src="{{ url_for('serve_result_image', filename=result_file)}}">
             {% elif result_file_type in ["mp4", "webm", "ogg", "mov"] %}
+                <video controls>
+                    <source src="{{ url_for('serve_result_video', filename=result_file)}}" type="video/{{ file_type }}">
+                    Your browser does not support the video tag.
+                </video>
             {% else %}
             {% endif %}
         {% endif %}

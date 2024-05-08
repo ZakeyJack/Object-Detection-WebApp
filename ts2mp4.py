@@ -2,7 +2,7 @@ import subprocess
 from IPython.display import HTML
 import os
 
-folder_path = "C:\\Users\\zakin\\Documents\\GitHub\\Object-Detection-WebApp"
+folder_path = "C:\\Users\\PC\\Videos"
 output_format = ".mp4"
 
 for file in os.listdir(folder_path):
